@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL - 数字异化协议</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon-blue: #00f2ff; --neon-purple: #bc13fe; --cyber-bg: #0a0a0c; }
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: var(--cyber-bg); color: #ffffff; overflow-x: hidden; scrollbar-width: none; }
+        body::-webkit-scrollbar { display: none; }
+        .mono { font-family: 'Share Tech Mono', monospace; }
+        .cyber-border { border: 1px solid var(--neon-blue); box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); background: rgba(16, 16, 20, 0.95); position: relative; }
+        .cyber-border::before { content: ""; position: absolute; top: -2px; left: -2px; width: 10px; height: 10px; border-top: 2px solid var(--neon-blue); border-left: 2px solid var(--neon-blue); }
+        .option-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 242, 255, 0.2); transition: all 0.3s; color: #cbd5e1; }
+        .option-btn:hover { background: rgba(0, 242, 255, 0.1); border-color: var(--neon-blue); color: var(--neon-blue); transform: translateX(5px); }
+        .rank-tag { font-size: 9px; padding: 2px 6px; border: 1px solid #333; color: #555; margin-right: 4px; border-radius: 2px; }
+        .rank-tag.active { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
+        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        .alert-red { animation: pulse-red 2s infinite; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center py-10 px-6">
+    <div class="fixed inset-0 pointer-events-none opacity-20">
+        <div class="absolute top-0 left-1/4 w-px h-full bg-gradient-to-b from-transparent via-[#00f2ff] to-transparent"></div>
+        <div class="absolute top-1/3 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#bc13fe] to-transparent"></div>
+    </div>
+
+    <div class="w-full max-w-lg z-10">
+        <div id="cover-page" class="text-center">
+            <h1 class="mono text-5xl font-bold mb-4 italic"><span class="text-[#00f2ff]">A L I E N</span><span class="text-white">ATION</span></h1>
+            <p class="mono text-[10px] text-gray-500 mb-12 tracking-[0.4em]">DIGITAL EXISTENCE PROTOCOL v2.1</p>
+            <div class="cyber-border p-8 rounded-lg mb-8">
+                <p class="text-sm text-gray-400 mb-8 italic">“我们活在一个‘他者’消失的时代，这正是异化的开始。”</p>
+                <button onclick="startQuiz()" class="w-full py-4 border border-[#00f2ff] text-[#00f2ff] mono text-sm hover:bg-[#00f2ff] hover:text-black transition-all">INITIATE_SYSTEM</button>
+            </div>
+        </div>
+
+        <div id="quiz-page" class="hidden">
+            <div class="flex justify-between items-end mb-4 mono text-[10px]">
+                <div class="text-[#00f2ff]">ANALYZING_CORE_DATA...</div>
+                <div>STEP <span id="current-step" class="text-white">1</span> / 24</div>
+            </div>
+            <div class="h-[1px] w-full bg-gray-800 mb-8"><div id="progress-bar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%"></div></div>
+            <div class="cyber-border rounded-lg p-8 min-h-[420px] flex flex-col justify-between">
+                <div><p id="question-text" class="text-lg font-bold mb-8 text-white"></p><div id="options-list" class="space-y-3"></div></div>
+                <div id="ref-box" class="mt-8 pt-4 border-t border-gray-900 hidden">
+                    <p class="mono text-[9px] text-[#bc13fe] mb-1">LOG_ENTRY</p>
+                    <p id="ref-text" class="text-[11px] text-gray-500 italic"></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-page" class="hidden">
+            <div class="text-center mb-6"><p class="mono text-[10px] text-gray-500 uppercase">Final Assessment</p><h2 id="rank-title" class="text-3xl font-bold mt-1 tracking-tighter text-[#00f2ff]"></h2></div>
+
+            <div id="rank-matrix" class="flex flex-wrap justify-center gap-y-2 mb-8 opacity-60">
+                <span class="rank-tag" id="tag-0">Lv.1 荒野拾荒者</span>
+                <span class="rank-tag" id="tag-1">Lv.2 离线漫游者</span>
+                <span class="rank-tag" id="tag-2">Lv.3 平衡木走索者</span>
+                <span class="rank-tag" id="tag-3">Lv.4 赛博景观表演者</span>
+                <span class="rank-tag" id="tag-4">Lv.5 全景监狱重症病患</span>
+                <span class="rank-tag" id="tag-5">Lv.6 赛博终极幽灵</span>
+            </div>
+
+            <div class="cyber-border rounded-xl p-4 mb-6"><canvas id="radarChart"></canvas></div>
+
+            <div id="critical-alert" class="alert-red bg-red-950/20 p-4 rounded-lg mb-6 hidden">
+                <p id="alert-text" class="text-xs text-red-200 font-medium text-center"></p>
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-xl p-6 mb-6">
+                <p id="result-desc" class="text-xs text-gray-300 leading-relaxed mb-6 italic"></p>
+
+                <div class="border-t border-white/10 pt-4">
+                    <p class="mono text-[9px] text-[#bc13fe] mb-2">PHILOSOPHICAL_PRESCRIPTION / 哲学处方</p>
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 w-8 h-8 bg-[#bc13fe]/20 rounded flex items-center justify-center text-[10px] text-[#bc13fe] mr-3">书</div>
+                        <div>
+                            <p id="book-title" class="text-xs font-bold text-white mb-1"></p>
+                            <p id="book-reason" class="text-[11px] text-gray-500 leading-snug"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-4 bg-white text-black mono text-xs font-bold hover:bg-[#00f2ff] transition-colors">REBOOT_SYSTEM</button>
+        </div>
+    </div>
+
+    <script>
+        // 24题数据 (沿用之前的题库逻辑，保持dimension正确)
+        const questions = [
+            { text: "面对落日或晚餐时，你的第一本能是？", dimension: "transparency", options: [{ text: "直接感受当下", score: 0, ref: "沉浸于非生产性时刻。"}, { text: "拍一张留念", score: 2, ref: "保留记忆的褶皱。"}, { text: "构思配文期待反馈", score: 5, ref: "万物皆为展示。"}]},
+            { text: "是否为了维持“数字人设”做违背心情的事？", dimension: "transparency", options: [{ text: "从不", score: 0, ref: "坚持自我的非透明性。"}, { text: "偶尔", score: 2, ref: "轻度数字修辞。"}, { text: "经常", score: 5, ref: "迎合消解了真实。"}]},
+            { text: "如何看待社交软件的点赞反馈？", dimension: "transparency", options: [{ text: "不看反馈", score: 0, ref: "对数据体系免疫。"}, { text: "有满足感", score: 2, ref: "温和参与。"}, { text: "没点赞会沮丧", score: 5, ref: "价值被数据绑架。"}]},
+            { text: "休息日或深夜会下意识刷工作消息吗？", dimension: "exploitation", options: [{ text: "彻底关闭", score: 0, ref: "划定休息边界。"}, { text: "强迫症式查看", score: 3, ref: "焦虑潜意识渗透。"}, { text: "时刻在线", score: 5, ref: "自我剥削。"}]},
+            { text: "对“多线程处理”的态度是？", dimension: "exploitation", options: [{ text: "坚持深度沉浸", score: 0, ref: "沉思生活的阵地。"}, { text: "被迫如此", score: 3, ref: "被动加速。"}, { text: "无法忍受单任务", score: 5, ref: "灵魂在碎片化中磨损。"}]},
+            { text: "面对网速慢导致的等待，你的反应？", dimension: "exploitation", options: [{ text: "顺势发呆", score: 0, ref: "对延迟的包容。"}, { text: "烦躁切换", score: 3, ref: "无法忍受空虚。"}, { text: "不断刷新", score: 5, ref: "被即时性驯化。"}]},
+            { text: "看到严重相左的观点时，你会？", dimension: "homogeneity", options: [{ text: "主动关注", score: 0, ref: "拥抱他者的异质性。"}, { text: "了解想法", score: 1, ref: "保留沟通可能。"}, { text: "立刻拉黑", score: 5, ref: "同质化茧房。"}]},
+            { text: "算法推荐比现实朋友更懂你吗？", dimension: "homogeneity", options: [{ text: "警惕这种懂", score: 0, ref: "抵抗算法喂养。"}, { text: "觉得好用", score: 2, ref: "理性工具使用。"}, { text: "是，现实社交尴尬", score: 5, ref: "他者被代码简化。"}]},
+            { text: "上次超一小时不看手机深度谈话？", dimension: "desocialization", options: [{ text: "经常", score: 0, ref: "重构肉身联结。"}, { text: "上周", score: 2, ref: "专注力被牵引。"}, { text: "不记得了", score: 5, ref: "联结在场但灵魂缺席。"}]},
+            { text: "手机电量低于20%且没充电宝？", dimension: "addiction", options: [{ text: "平静", score: 0, ref: "断连的自由。"}, { text: "轻微不安", score: 2, ref: "数字安全感丧失。"}, { text: "严重焦虑", score: 5, ref: "电子义体器官化。"}]},
+            { text: "你发现自己难以读完长篇纸质书？", dimension: "addiction", options: [{ text: "享受深度沉思", score: 0, ref: "抵御注意通胀。"}, { text: "需极大意志力", score: 2, ref: "沉思能力退化。"}, { text: "是，看两页就想摸手机", score: 5, ref: "被短效多巴胺重塑。"}]},
+            { text: "对于“隐私”，你的态度？", dimension: "nihilism", options: [{ text: "极力守护", score: 0, ref: "保护自我的褶皱。"}, { text: "为方便妥协", score: 2, ref: "便利成新的信仰。"}, { text: "无所谓", score: 5, ref: "彻底裸露。"}]},
+            { text: "处理致歉或告白等情感的方式？", dimension: "desocialization", options: [{ text: "坚持见面", score: 0, ref: "爱欲需肉身在场。"}, { text: "优先文字", score: 2, ref: "中介稀释痛感。"}, { text: "表情包", score: 5, ref: "情感变得廉价。"}]},
+            { text: "生活天高度相似，像平滑溜走？", dimension: "nihilism", options: [{ text: "不，感知物理节律", score: 0, ref: "时间拥有重量。"}, { text: "有感觉，试图救赎", score: 2, ref: "时间流失的焦虑。"}, { text: "是，失去深度", score: 5, ref: "沦为信息流。"}]},
+            { text: "选择“绝对离线”的周末预判？", dimension: "addiction", options: [{ text: "治愈假期", score: 0, ref: "重返存在的荒野。"}, { text: "难受但能挺过", score: 2, ref: "戒断初期的阵痛。"}, { text: "酷刑", score: 5, ref: "被数据接管。"}]},
+            { text: "寻找伴侣或交友倾向？", dimension: "homogeneity", options: [{ text: "拒绝标签", score: 0, ref: "对他者的敬畏。"}, { text: "看重现实接触", score: 2, ref: "在数据中找缝隙。"}, { text: "依赖标签匹配", score: 5, ref: "他者降级为商品。"}]},
+            { text: "与亲友发生矛盾时的第一反应？", dimension: "desocialization", options: [{ text: "直接约谈", score: 0, ref: "痛苦是真实的。"}, { text: "屏幕后冷处理", score: 3, ref: "虚拟提供了虚假防御。"}, { text: "发动态内涵", score: 5, ref: "交流变表演。"}]},
+            { text: "如何看待网络上的悲惨社会新闻？", dimension: "desocialization", options: [{ text: "停下思考共情", score: 0, ref: "触碰他者的痛苦。"}, { text: "点赞留个言", score: 3, ref: "同情心沦为消费。"}, { text: "惯性滑过", score: 5, ref: "感官彻底钝化。"}]},
+            { text: "观看视频时，无法忍受“原速”？", dimension: "exploitation", options: [{ text: "不倍速", score: 0, ref: "尊重他者的节奏。"}, { text: "部分会", score: 2, ref: "效率与深度间游走。"}, { text: "必须2倍速", score: 5, ref: "灵魂被加速主义绑架。"}]},
+            { text: "对迷路、等待、坏天气的态度？", dimension: "homogeneity", options: [{ text: "真实的质感", score: 0, ref: "接纳不可控。"}, { text: "烦躁忍受", score: 2, ref: "现实阻力的回响。"}, { text: "厌恶进虚拟世界", score: 5, ref: "追求绝对平滑。"}]},
+            { text: "关于“美”，你的倾向标准？", dimension: "transparency", options: [{ text: "偏爱瑕疵感", score: 0, ref: "瑕疵是独特性。"}, { text: "接受瑕疵", score: 2, ref: "真实与修饰间妥协。"}, { text: "追求完美平滑", score: 5, ref: "平滑是美学暴力。"}]},
+            { text: "定期翻看社交媒体的“回忆”？", dimension: "nihilism", options: [{ text: "不看", score: 0, ref: "活在当下。"}, { text: "有趣", score: 2, ref: "回忆是点缀。"}, { text: "是，依赖提醒", score: 5, ref: "存在被数据化存储。"}]},
+            { text: "社交账号封禁的感觉？", dimension: "nihilism", options: [{ text: "遗憾但不慌", score: 0, ref: "拥有精神家园。"}, { text: "难过", score: 3, ref: "感受到了丧失。"}, { text: "前半生被抹杀", score: 5, ref: "自我寄生于数字。"}]},
+            { text: "半夜醒来下意识摸手机？", dimension: "addiction", options: [{ text: "手机放远", score: 0, ref: "守卫夜晚。"}, { text: "偶尔", score: 2, ref: "应激反应。"}, { text: "每晚", score: 5, ref: "赛博寄生。"}]}
+        ];
+
+        let currentIdx = 0, totalScore = 0;
+        let scores = { transparency: 0, exploitation: 0, homogeneity: 0, desocialization: 0, addiction: 0, nihilism: 0 };
+
+        function startQuiz() { document.getElementById('cover-page').classList.add('hidden'); document.getElementById('quiz-page').classList.remove('hidden'); init(); }
+
+        function init() {
+            if (currentIdx >= questions.length) { showResult(); return; }
+            const q = questions[currentIdx];
+            document.getElementById('question-text').innerText = q.text;
+            document.getElementById('current-step').innerText = currentIdx + 1;
+            document.getElementById('progress-bar').style.width = ((currentIdx + 1) / questions.length * 100) + '%';
+            const list = document.getElementById('options-list'); list.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button'); btn.className = "option-btn w-full p-4 text-left text-[13px] rounded"; btn.innerText = opt.text;
+                btn.onclick = () => {
+                    scores[q.dimension] += opt.score; totalScore += opt.score;
+                    document.getElementById('ref-box').classList.remove('hidden'); document.getElementById('ref-text').innerText = opt.ref;
+                    setTimeout(() => { document.getElementById('ref-box').classList.add('hidden'); currentIdx++; init(); }, 1000);
+                };
+                list.appendChild(btn);
+            });
+        }
+
+        function showResult() {
+            document.getElementById('quiz-page').classList.add('hidden'); document.getElementById('result-page').classList.remove('hidden');
+            let rank = "", desc = "", book = "", reason = "", rankIdx = 0;
+
+            if(totalScore <= 20) { rank = "荒野拾荒者"; rankIdx = 0; desc = "你保留了完整的人类感官。你是数字时代的异类。在这个算法试图吞噬一切的时代，你依然保留着肉身的直觉。你的深度来源于你对‘不可见’事物的坚持。建议：继续保持这种对‘无意义’的热爱，有时也可以稍微依赖便利。"; book = "《沉思生活的复兴》"; reason = "建议阅读第三章关于‘闲暇的积极性’。你已经是最好的状态，这本书将为你提供更深的理论护甲。"; }
+            else if(totalScore <= 45) { rank = "离线漫游者"; rankIdx = 1; desc = "你是一个清醒的工具使用者。你行走在赛博世界的边缘，享受其便利，却时刻准备着撤离。你拥有现代人最稀缺的财富：断联的自由。建议：在数字洪流中建立几个现实的‘堡垒’，保持住自己，让工具依然是工具。"; book = "《他者的消失》"; reason = "读读关于‘感官的重构’部分。你擅长使用工具，但要警惕工具带来的隐形孤独。"; }
+            else if(totalScore <= 75) { rank = "平衡木走索者"; rankIdx = 2; desc = "你在便利与疲惫之间反复。你已经意识到了自我的剥削，但由于社会关系的数字化，你无法彻底抽身。这种拉扯感是你尚未被完全异化的证明。建议：试着在周末进行‘数字戒断’，给自己每个月设计一个读书日吧！（实体书数字戒断效果更佳"; book = "《倦怠社会》"; reason = "重点看‘功绩主体’一章。你正处于自我压榨的边缘，需要学会如何‘深度无聊’。"; }
+            else if(totalScore <= 95) { rank = "赛博景观表演者"; rankIdx = 3; desc = "你已经成为了景观的一部分。你的生活在很大程度上是为了‘被看见’而存在的。他者的眼光构成了你的自我评价，这种透明性正在榨干你的独特性。建议：试着做一件绝对不发朋友圈的好事，哪怕先从发一条私密朋友圈做起，让你的目光回到你自己。"; book = "《透明社会》"; reason = "看‘强制披露’部分。你正在丧失‘私密性的美学’，试着在数字化生活中留下一些不可见。"; }
+            else if(totalScore <= 115) { rank = "全景监狱重症病患"; rankIdx = 4; desc = "他者的消失令你安全，但也令你空洞。你已习惯了自我剥削，将透明视为理所当然。建议：主动寻找那些会让你感到“不快”的异质性信息，看看监狱在的模样吧！"; book = "《精神政治学》"; reason = "深入研究‘大数据’如何重塑权力。你所在的监狱没有围墙，只有‘赞’和‘关注’。"; }
+            else { rank = "赛博终极幽灵"; rankIdx = 5; desc = "你的肉身只是信号的载体，你的灵魂已在云端完成异化。你彻底规避了痛苦，但也彻底丧失了作为人的深度。对你来说，任何语言的干预都只是另一段无效的干扰代码。"; book = "《爱欲之死》"; reason = "如果你还想重返人间，请读整本书。你需要重新学习如何通过‘他者的痛苦’去感知真实。"; }
+
+            document.getElementById('rank-title').innerText = rank;
+            document.getElementById('result-desc').innerText = desc;
+            document.getElementById('book-title').innerText = book;
+            document.getElementById('book-reason').innerText = reason;
+            document.getElementById(`tag-${rankIdx}`).classList.add('active');
+
+            const maxDim = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            if(scores[maxDim] >= 15) {
+                const alertBox = document.getElementById('critical-alert'); alertBox.classList.remove('hidden');
+                const alerts = { 
+                    transparency: "“你真的觉得，没被拍下来的风景就不存在吗？”",
+                    exploitation: "“别再卷了，算法不需要休息，但你的灵魂需要。”",
+                    homogeneity: "“恭喜，你已经成功把自己关进了一个名为‘我喜欢’的牢笼。”",
+                    desocialization: "“屏幕后的你很安全，但也正在死去。”",
+                    addiction: "“你的手指比你的大脑更早感到饥饿。”",
+                    nihilism: "“当一切都变平滑，生活也就失去了抓手。”"
+                };
+                document.getElementById('alert-text').innerText = alerts[maxDim];
+            }
+
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: ['透明性', '功绩欲', '同质化', '脱社会', '成瘾度', '虚无感'],
+                    datasets: [{ data: Object.values(scores), backgroundColor: 'rgba(0, 242, 255, 0.1)', borderColor: '#00f2ff', borderWidth: 1, pointRadius: 0 }]
+                },
+                options: { scales: { r: { grid: { color: '#222' }, angleLines: { color: '#222' }, ticks: { display: false }, min: 0, max: 20 } }, plugins: { legend: { display: false } } }
+            });
+        }
+    </script>
+</body>
+</html>
