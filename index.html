@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TERMINAL - 數字異化協議</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon-blue: #00f2ff; --neon-purple: #bc13fe; --cyber-bg: #0a0a0c; }
+        body { font-family: 'Noto Sans SC', sans-serif; background-color: var(--cyber-bg); color: #ffffff; overflow-x: hidden; -webkit-tap-highlight-color: transparent; }
+        .mono { font-family: 'Share Tech Mono', monospace; }
+        .cyber-border { border: 1px solid var(--neon-blue); box-shadow: 0 0 15px rgba(0, 242, 255, 0.1); background: rgba(16, 16, 20, 0.95); position: relative; }
+        .option-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(0, 242, 255, 0.2); transition: all 0.2s; color: #cbd5e1; touch-action: manipulation; }
+        .option-btn:active { background: rgba(0, 242, 255, 0.2); border-color: var(--neon-blue); transform: scale(0.98); }
+        .rank-tag { font-size: 10px; padding: 4px 8px; border: 1px solid #333; color: #555; border-radius: 4px; transition: all 0.5s; }
+        .rank-tag.active { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 8px var(--neon-blue); background: rgba(0, 242, 255, 0.05); }
+        @keyframes alert-pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .alert-red { border: 1px solid #ef4444; background: rgba(239, 68, 68, 0.1); animation: alert-pulse 1.5s infinite; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start py-8 px-5">
+    <div class="fixed inset-0 pointer-events-none opacity-10">
+        <div class="absolute top-0 left-1/4 w-px h-full bg-[#00f2ff]"></div>
+        <div class="absolute top-1/2 left-0 w-full h-px bg-[#bc13fe]"></div>
+    </div>
+
+    <div class="w-full max-w-md z-10">
+        <div id="cover-page" class="text-center mt-12">
+            <h1 class="mono text-5xl font-bold mb-4 italic tracking-tighter">
+                <span class="text-[#00f2ff]">A L I E N</span><span class="text-white">ATION</span>
+            </h1>
+            <p class="mono text-[10px] text-gray-500 mb-16 tracking-[0.4em]">DIGITAL EXISTENCE PROTOCOL v2.1</p>
+            <div class="cyber-border p-8 rounded-2xl mb-10">
+                <p class="text-sm text-gray-400 mb-8 leading-relaxed italic">“我們活在一個‘他者’消失的時代，這正是異化的開始。”</p>
+                <button onclick="startQuiz()" class="w-full py-5 border border-[#00f2ff] text-[#00f2ff] mono text-sm font-bold tracking-widest active:bg-[#00f2ff] active:text-black transition-all">
+                    INITIATE_SYSTEM
+                </button>
+            </div>
+            <p class="text-[9px] text-gray-600 mono uppercase tracking-widest">Designed for Mobile Terminal</p>
+        </div>
+
+        <div id="quiz-page" class="hidden w-full">
+            <div class="flex justify-between items-end mb-4 mono text-[10px]">
+                <div class="text-[#00f2ff] animate-pulse">ANALYZING_CORE...</div>
+                <div class="text-gray-500">STEP <span id="current-step" class="text-white text-xs">1</span> / 24</div>
+            </div>
+            <div class="h-[2px] w-full bg-gray-900 mb-8"><div id="progress-bar" class="h-full bg-[#00f2ff] transition-all duration-500" style="width: 0%"></div></div>
+            <div class="cyber-border rounded-2xl p-6 min-h-[450px] flex flex-col justify-between">
+                <div>
+                    <p id="question-text" class="text-xl font-bold mb-10 text-white leading-snug"></p>
+                    <div id="options-list" class="space-y-4"></div>
+                </div>
+                <div id="ref-box" class="mt-8 pt-5 border-t border-gray-900 hidden">
+                    <p class="mono text-[9px] text-[#bc13fe] mb-1">LOG_ENTRY</p>
+                    <p id="ref-text" class="text-xs text-gray-500 italic leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="result-page" class="hidden w-full pb-10">
+            <div class="text-center mb-6">
+                <p class="mono text-[10px] text-gray-500 uppercase tracking-widest">Assessment Finalized</p>
+                <h2 id="rank-title" class="text-3xl font-bold mt-2 text-[#00f2ff] tracking-tight"></h2>
+            </div>
+
+            <div id="rank-matrix" class="grid grid-cols-2 gap-2 mb-8 px-2">
+                <div class="rank-tag text-center" id="tag-0">荒野拾荒者</div>
+                <div class="rank-tag text-center" id="tag-1">離線漫遊者</div>
+                <div class="rank-tag text-center" id="tag-2">平衡木走索者</div>
+                <div class="rank-tag text-center" id="tag-3">賽博景觀表演者</div>
+                <div class="rank-tag text-center" id="tag-4">全景監獄病患</div>
+                <div class="rank-tag text-center" id="tag-5">賽博終極幽靈</div>
+            </div>
+
+            <div class="cyber-border rounded-2xl p-4 mb-6 aspect-square flex items-center justify-center">
+                <canvas id="radarChart"></canvas>
+            </div>
+
+            <div id="critical-alert" class="alert-red p-5 rounded-2xl mb-6 hidden">
+                <p id="alert-text" class="text-sm text-red-200 font-bold text-center leading-relaxed"></p>
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
+                <p id="result-desc" class="text-sm text-gray-300 leading-relaxed mb-8 italic"></p>
+                <div class="border-t border-white/10 pt-6">
+                    <p class="mono text-[9px] text-[#bc13fe] mb-3 uppercase tracking-tighter">Philosophical Prescription / 韓炳哲導讀</p>
+                    <div class="flex items-start bg-black/40 p-4 rounded-xl border border-white/5">
+                        <div class="flex-shrink-0 w-10 h-10 bg-[#bc13fe]/20 rounded-lg flex items-center justify-center text-xl mr-4">📖</div>
+                        <div>
+                            <p id="book-title" class="text-sm font-bold text-[#00f2ff] mb-1"></p>
+                            <p id="book-reason" class="text-xs text-gray-400 leading-normal"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-5 bg-white text-black mono text-sm font-black tracking-widest active:bg-[#00f2ff] transition-all rounded-xl">REBOOT_SYSTEM</button>
+        </div>
+    </div>
+
+    <script>
+        // ... (這裡填入之前 24 道完整題目數據，邏輯保持一致)
+        const questions = [
+            { text: "面對落日或晚餐時，你的第一本能是？", dimension: "transparency", options: [{ text: "直接感受當下", score: 0, ref: "沉浸於非生產性時刻。"}, { text: "拍一張留念", score: 2, ref: "保留記憶的褶皺。"}, { text: "構思配文期待反饋", score: 5, ref: "萬物皆為展示。"}]},
+            { text: "是否為了維持“數字人設”做違背心情的事？", dimension: "transparency", options: [{ text: "從不", score: 0, ref: "堅持自我的非透明性。"}, { text: "偶爾", score: 2, ref: "輕度數字修辭。"}, { text: "經常", score: 5, ref: "迎合消解了真實。"}]},
+            { text: "如何看待社交軟體的點贊反饋？", dimension: "transparency", options: [{ text: "不看反饋", score: 0, ref: "對數據體系免疫。"}, { text: "有滿足感", score: 2, ref: "溫和參與。"}, { text: "沒點贊會沮喪", score: 5, ref: "價值被數據綁架。"}]},
+            { text: "休息日或深夜會下意識刷工作消息嗎？", dimension: "exploitation", options: [{ text: "徹底關閉", score: 0, ref: "劃定休息邊界。"}, { text: "強迫症式查看", score: 3, ref: "焦慮潛意識滲透。"}, { text: "時刻在線", score: 5, ref: "自我剝削。"}]},
+            { text: "對“多線程處理”的態度是？", dimension: "exploitation", options: [{ text: "堅持深度沉浸", score: 0, ref: "沉思生活的陣地。"}, { text: "被迫如此", score: 3, ref: "被動加速。"}, { text: "無法忍受單任務", score: 5, ref: "靈魂在碎片化中磨損。"}]},
+            { text: "面對網速慢導致的等待，你的反應？", dimension: "exploitation", options: [{ text: "順勢發呆", score: 0, ref: "對延遲的包容。"}, { text: "煩躁切換", score: 3, ref: "無法忍受空虛。"}, { text: "不斷刷新", score: 5, ref: "被即時性馴化。"}]},
+            { text: "看到嚴重相左的觀點時，你會？", dimension: "homogeneity", options: [{ text: "主動關注", score: 0, ref: "擁抱他者的異質性。"}, { text: "了解想法", score: 1, ref: "保留溝通可能。"}, { text: "立刻拉黑", score: 5, ref: "同質化繭房。"}]},
+            { text: "算法推薦比現實朋友更懂你嗎？", dimension: "homogeneity", options: [{ text: "警惕這種懂", score: 0, ref: "抵抗算法餵養。"}, { text: "覺得好用", score: 2, ref: "理性工具使用。"}, { text: "是，現實社交尷尬", score: 5, ref: "他者被代碼簡化。"}]},
+            { text: "上次超一小時不看手機深度談話？", dimension: "desocialization", options: [{ text: "經常", score: 0, ref: "重構肉身聯結。"}, { text: "上周", score: 2, ref: "專注力被牽引。"}, { text: "不記得了", score: 5, ref: "聯結在場但靈魂缺席。"}]},
+            { text: "手機電量低於20%且沒充電寶？", dimension: "addiction", options: [{ text: "平靜", score: 0, ref: "斷連的自由。"}, { text: "輕微不安", score: 2, ref: "數字安全感喪失。"}, { text: "嚴重焦慮", score: 5, ref: "電子義體器官化。"}]},
+            { text: "你發現自己難以讀完長篇紙質書？", dimension: "addiction", options: [{ text: "享受深度沉思", score: 0, ref: "抵御注意通脹。"}, { text: "需極大意志力", score: 2, ref: "沉思能力退化。"}, { text: "是，看兩頁就想摸手機", score: 5, ref: "被短效多巴胺重塑。"}]},
+            { text: "對於“隱私”，你的態度？", dimension: "nihilism", options: [{ text: "極力守護", score: 0, ref: "保護自我的褶皺。"}, { text: "為方便妥協", score: 2, ref: "便利成新的信仰。"}, { text: "無所謂", score: 5, ref: "徹底裸露。"}]},
+            { text: "處理致歉或告白等情感的方式？", dimension: "desocialization", options: [{ text: "堅持見面", score: 0, ref: "愛欲需肉身在場。"}, { text: "優先文字", score: 2, ref: "中介稀釋痛感。"}, { text: "表情包", score: 5, ref: "情感變得廉價。"}]},
+            { text: "生活高度相似，像平滑溜走？", dimension: "nihilism", options: [{ text: "不，感知物理節律", score: 0, ref: "時間擁有重量。"}, { text: "有感覺，試圖救贖", score: 2, ref: "時間流失的焦慮。"}, { text: "是，失去深度", score: 5, ref: "淪為信息流。"}]},
+            { text: "選擇“絕對離線”的週末預判？", dimension: "addiction", options: [{ text: "治癒假期", score: 0, ref: "重返存在的荒野。"}, { text: "難受但能挺過", score: 2, ref: "戒斷初期的陣痛。"}, { text: "酷刑", score: 5, ref: "被數據接管。"}]},
+            { text: "尋找伴侶或交友傾向？", dimension: "homogeneity", options: [{ text: "拒絕標籤", score: 0, ref: "對他者的敬畏。"}, { text: "看重現實接觸", score: 2, ref: "在數據中找縫隙。"}, { text: "依賴標籤匹配", score: 5, ref: "他者降級為商品。"}]},
+            { text: "與親友發生矛盾時的第一反應？", dimension: "desocialization", options: [{ text: "直接約談", score: 0, ref: "痛苦是真實的。"}, { text: "屏幕後冷處理", score: 3, ref: "虛擬提供了虛假防禦。"}, { text: "發動態內涵", score: 5, ref: "交流變表演。"}]},
+            { text: "如何看待網路上的悲慘社會新聞？", dimension: "desocialization", options: [{ text: "停下思考共情", score: 0, ref: "觸碰他者的痛苦。"}, { text: "點讚留個言", score: 3, ref: "同情心淪為消費。"}, { text: "慣性滑過", score: 5, ref: "感官徹底鈍化。"}]},
+            { text: "觀看視頻時，無法忍受“原速”？", dimension: "exploitation", options: [{ text: "不倍速", score: 0, ref: "尊重他者的節奏。"}, { text: "部分會", score: 2, ref: "效率與深度間遊走。"}, { text: "必須2倍速", score: 5, ref: "靈魂被加速主義綁架。"}]},
+            { text: "對迷路、等待、壞天氣的態度？", dimension: "homogeneity", options: [{ text: "真實的質感", score: 0, ref: "接納不可控。"}, { text: "煩躁忍受", score: 2, ref: "現實阻力的回響。"}, { text: "厭惡進虛擬世界", score: 5, ref: "追求絕對平滑。"}]},
+            { text: "關於“美”，你的傾向標準？", dimension: "transparency", options: [{ text: "偏愛瑕疵感", score: 0, ref: "瑕疵是獨特性。"}, { text: "接受瑕疵", score: 2, ref: "真實與修飾間妥協。"}, { text: "追求完美平滑", score: 5, ref: "平滑是美學暴力。"}]},
+            { text: "定期翻看社交媒體的“回憶”？", dimension: "nihilism", options: [{ text: "不看", score: 0, ref: "活在當下來記憶。"}, { text: "有趣", score: 2, ref: "回憶是點綴。"}, { text: "是，依賴提醒", score: 5, ref: "存在被數據化存儲。"}]},
+            { text: "社交帳號封禁的感覺？", dimension: "nihilism", options: [{ text: "遺憾但不慌", score: 0, ref: "擁有精神家園。"}, { text: "難過", score: 3, ref: "感受到了喪失。"}, { text: "前半生被抹殺", score: 5, ref: "自我寄生於數字。"}]},
+            { text: "半夜醒來下意識摸手機？", dimension: "addiction", options: [{ text: "手機放遠", score: 0, ref: "守衛夜晚的寧靜。"}, { text: "偶爾", score: 2, ref: "應激反應。"}, { text: "每晚", score: 5, ref: "賽博寄生。"}]}
+        ];
+
+        let currentIdx = 0, totalScore = 0;
+        let scores = { transparency: 0, exploitation: 0, homogeneity: 0, desocialization: 0, addiction: 0, nihilism: 0 };
+
+        function startQuiz() { document.getElementById('cover-page').classList.add('hidden'); document.getElementById('quiz-page').classList.remove('hidden'); init(); window.scrollTo(0,0); }
+
+        function init() {
+            if (currentIdx >= questions.length) { showResult(); return; }
+            const q = questions[currentIdx];
+            document.getElementById('question-text').innerText = q.text;
+            document.getElementById('current-step').innerText = currentIdx + 1;
+            document.getElementById('progress-bar').style.width = ((currentIdx + 1) / questions.length * 100) + '%';
+            const list = document.getElementById('options-list'); list.innerHTML = '';
+            q.options.forEach(opt => {
+                const btn = document.createElement('button'); 
+                btn.className = "option-btn w-full p-5 text-left text-[14px] rounded-xl font-medium leading-relaxed"; 
+                btn.innerText = opt.text;
+                btn.onclick = () => {
+                    scores[q.dimension] += opt.score; totalScore += opt.score;
+                    document.getElementById('ref-box').classList.remove('hidden'); 
+                    document.getElementById('ref-text').innerText = opt.ref;
+                    setTimeout(() => { 
+                        document.getElementById('ref-box').classList.add('hidden'); 
+                        currentIdx++; init(); 
+                    }, 1000);
+                };
+                list.appendChild(btn);
+            });
+        }
+
+        function showResult() {
+            document.getElementById('quiz-page').classList.add('hidden'); 
+            document.getElementById('result-page').classList.remove('hidden');
+            window.scrollTo(0,0);
+      let rank = "", desc = "", book = "", reason = "", rankIdx = 0;
+
+            if(totalScore <= 20) { rank = "荒野拾荒者"; rankIdx = 0; desc = "你保留了完整的人类感官。你是数字时代的异类。在这个算法试图吞噬一切的时代，你依然保留着肉身的直觉。你的深度来源于你对‘不可见’事物的坚持。建议：继续保持这种对‘无意义’的热爱，有时也可以稍微依赖便利。"; book = "《沉思生活的复兴》"; reason = "建议阅读第三章关于‘闲暇的积极性’。你已经是最好的状态，这本书将为你提供更深的理论护甲。"; }
+            else if(totalScore <= 45) { rank = "离线漫游者"; rankIdx = 1; desc = "你是一个清醒的工具使用者。你行走在赛博世界的边缘，享受其便利，却时刻准备着撤离。你拥有现代人最稀缺的财富：断联的自由。建议：在数字洪流中建立几个现实的‘堡垒’，保持住自己，让工具依然是工具。"; book = "《他者的消失》"; reason = "读读关于‘感官的重构’部分。你擅长使用工具，但要警惕工具带来的隐形孤独。"; }
+            else if(totalScore <= 75) { rank = "平衡木走索者"; rankIdx = 2; desc = "你在便利与疲惫之间反复。你已经意识到了自我的剥削，但由于社会关系的数字化，你无法彻底抽身。这种拉扯感是你尚未被完全异化的证明。建议：试着在周末进行‘数字戒断’，给自己每个月设计一个读书日吧！（实体书数字戒断效果更佳"; book = "《倦怠社会》"; reason = "重点看‘功绩主体’一章。你正处于自我压榨的边缘，需要学会如何‘深度无聊’。"; }
+            else if(totalScore <= 95) { rank = "赛博景观表演者"; rankIdx = 3; desc = "你已经成为了景观的一部分。你的生活在很大程度上是为了‘被看见’而存在的。他者的眼光构成了你的自我评价，这种透明性正在榨干你的独特性。建议：试着做一件绝对不发朋友圈的好事，哪怕先从发一条私密朋友圈做起，让你的目光回到你自己。"; book = "《透明社会》"; reason = "看‘强制披露’部分。你正在丧失‘私密性的美学’，试着在数字化生活中留下一些不可见。"; }
+            else if(totalScore <= 115) { rank = "全景监狱重症病患"; rankIdx = 4; desc = "他者的消失令你安全，但也令你空洞。你已习惯了自我剥削，将透明视为理所当然。建议：主动寻找那些会让你感到“不快”的异质性信息，看看监狱在的模样吧！"; book = "《精神政治学》"; reason = "深入研究‘大数据’如何重塑权力。你所在的监狱没有围墙，只有‘赞’和‘关注’。"; }
+            else { rank = "赛博终极幽灵"; rankIdx = 5; desc = "你的肉身只是信号的载体，你的灵魂已在云端完成异化。你彻底规避了痛苦，但也彻底丧失了作为人的深度。对你来说，任何语言的干预都只是另一段无效的干扰代码。"; book = "《爱欲之死》"; reason = "如果你还想重返人间，请读整本书。你需要重新学习如何通过‘他者的痛苦’去感知真实。"; }
+
+            document.getElementById('rank-title').innerText = rank;
+            document.getElementById('result-desc').innerText = desc;
+            document.getElementById('book-title').innerText = book;
+            document.getElementById('book-reason').innerText = reason;
+            document.getElementById(`tag-${rankIdx}`).classList.add('active');
+
+            // 觸發扎心彈窗
+            const maxDim = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            if(scores[maxDim] >= 12) {
+                const alertBox = document.getElementById('critical-alert'); alertBox.classList.remove('hidden');
+                const alerts = { 
+                    transparency: "“你真的覺得，沒被拍下來的風景就不存在嗎？”",
+                    exploitation: "“別再卷了，算法不需要休息，但你的靈魂需要。”",
+                    homogeneity: "“恭喜，你已經成功把自己關進了一個名為‘我喜歡’的牢籠。”",
+                    desocialization: "“屏幕後的你很安全，但也正在死去。”",
+                    addiction: "“你的手指比你的大腦更早感到飢餓。”",
+                    nihilism: "“當一切都變平滑，生活也就失去了抓手。”"
+                };
+                document.getElementById('alert-text').innerText = alerts[maxDim];
+            }
+
+            new Chart(document.getElementById('radarChart'), {
+                type: 'radar',
+                data: {
+                    labels: ['透明性', '功績欲', '同質化', '脫社會', '成癮度', '虛無感'],
+                    datasets: [{ data: Object.values(scores), backgroundColor: 'rgba(0, 242, 255, 0.2)', borderColor: '#00f2ff', borderWidth: 2, pointRadius: 0 }]
+                },
+                options: { scales: { r: { grid: { color: 'rgba(255,255,255,0.1)' }, angleLines: { color: 'rgba(255,255,255,0.1)' }, ticks: { display: false }, min: 0, max: 20 } }, plugins: { legend: { display: false } } }
+            });
+        }
+    </script>
+</body>
+</html>
